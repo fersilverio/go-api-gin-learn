@@ -27,6 +27,7 @@ func (pr *ProductRepository) GetProducts() ([]model.Product, error) {
 		fmt.Println(err)
 		return []model.Product{}, err
 	}
+	defer rows.Close()
 
 	var productList []model.Product
 	var productObj model.Product
@@ -46,7 +47,10 @@ func (pr *ProductRepository) GetProducts() ([]model.Product, error) {
 		productList = append(productList, productObj)
 	}
 
-	rows.Close()
+	if err = rows.Err(); err != nil {
+		fmt.Println(err)
+		return []model.Product{}, err
+	}
 
 	return productList, nil
 
