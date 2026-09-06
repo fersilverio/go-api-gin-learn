@@ -92,3 +92,104 @@ func (p *productController) GetProductById(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, product)
 }
+
+func (p *productController) UpdateProduct(ctx *gin.Context) {
+	id := ctx.Param("productId")
+
+	if id == "" {
+		response := model.Response{
+			Message: "Id do produto nao pode ser nulo",
+		}
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	productId, err := strconv.Atoi(id)
+
+	if err != nil {
+		response := model.Response{
+			Message: "Id do produto precisa ser um numero",
+		}
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	var product model.Product
+
+	if err := ctx.ShouldBindJSON(&product); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = p.productUsecase.UpdateProduct(productId, &product)
+
+	if err != nil {
+		if err == usecase.ErrNotFound {
+			response := model.Response{
+				Message: "Produto nao foi encontrado na base de dados",
+			}
+			ctx.JSON(http.StatusNotFound, response)
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Produto atualizado com sucesso"})
+
+}
+
+func (p *productController) ParcialUpdateProduct(ctx *gin.Context) {
+	id := ctx.Param("productId")
+
+	if id == "" {
+		response := model.Response{
+			Message: "Id do produto nao pode ser nulo",
+		}
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	productId, err := strconv.Atoi(id)
+
+	if err != nil {
+		response := model.Response{
+			Message: "Id do produto precisa ser um numero",
+		}
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	var product model.Product
+
+	if err := ctx.ShouldBindJSON(&product); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = p.productUsecase.ParcialUpdateProduct(productId, &product)
+
+	if err != nil {
+		if err == usecase.ErrNotFound {
+			response := model.Response{
+				Message: "Produto nao foi encontrado na base de dados",
+			}
+			ctx.JSON(http.StatusNotFound, response)
+			return
+		}
+
+		if err == usecase.ErrNoFieldsPatch {
+			response := model.Response{
+				Message: "Nenhum campo fornecido para atualização",
+			}
+			ctx.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Produto atualizado com sucesso"})
+}

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"go-api/model"
+	"strings"
 )
 
 type ProductRepository struct {
@@ -99,4 +100,77 @@ func (pr *ProductRepository) GetProductById(id_product int) (*model.Product, err
 
 	query.Close()
 	return &produto, nil
+}
+
+func (pr *ProductRepository) UpdateProduct(id_product int, product *model.Product) (int64, error) {
+	query, err := pr.connection.Prepare("UPDATE product SET product_name = $1, price = $2 WHERE id = $3 RETURNING *")
+
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+
+	result, err := query.Exec(product.Name, product.Price, id_product)
+
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+
+	query.Close()
+	return rowsAffected, nil
+}
+
+func (pr *ProductRepository) ParcialUpdateProduct(id_product int, product *model.Product) (int64, error) {
+	var setClauses []string
+	var args []interface{}
+
+	paramCount := 1
+
+	if product.Name != "" {
+		setClauses = append(setClauses, fmt.Sprintf("product_name = $%d", paramCount))
+		args = append(args, product.Name)
+		paramCount++
+	}
+
+	if product.Price != 0 {
+		setClauses = append(setClauses, fmt.Sprintf("price = $%d", paramCount))
+		args = append(args, product.Price)
+		paramCount++
+	}
+
+	if len(setClauses) == 0 {
+		return 0, fmt.Errorf("no fields to update")
+	}
+
+	query := fmt.Sprintf("UPDATE product SET %s WHERE id = $%d", strings.Join(setClauses, ", "), paramCount)
+	args = append(args, id_product)
+
+	stmt, err := pr.connection.Prepare(query)
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(args...)
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+
+	return rowsAffected, nil
 }

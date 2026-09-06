@@ -1,8 +1,14 @@
 package usecase
 
 import (
+	"errors"
 	"go-api/model"
 	"go-api/repository"
+)
+
+var (
+	ErrNotFound      = errors.New("todo not found")
+	ErrNoFieldsPatch = errors.New("no fields provided for update")
 )
 
 // letra maiuscula para ser visivel fora do pacote
@@ -41,4 +47,33 @@ func (pu *ProductUsecase) GetProductById(id_product int) (*model.Product, error)
 	}
 
 	return product, nil
+}
+
+func (pu *ProductUsecase) UpdateProduct(id_product int, product *model.Product) error {
+	rowsAffected, err := pu.repository.UpdateProduct(id_product, product)
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+func (pu *ProductUsecase) ParcialUpdateProduct(id_product int, product *model.Product) error {
+	rowsAffected, err := pu.repository.ParcialUpdateProduct(id_product, product)
+	if err != nil {
+		if err.Error() == "no fields to update" {
+			return ErrNoFieldsPatch
+		}
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }

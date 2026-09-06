@@ -25,15 +25,17 @@ func main() {
 	// Camada de controllers
 	ProductController := controller.NewProductController(ProductUsecase)
 
+	// Rotas
 	server.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
 			"message": "pong",
 		})
 	})
-
 	server.GET("/products", ProductController.GetProducts)
 	server.POST("/product", ProductController.CreateProduct)
 	server.GET("/product/:productId", ProductController.GetProductById)
+	server.PUT("/product/:productId", ProductController.UpdateProduct)
+	server.PATCH("/product/:productId", ProductController.ParcialUpdateProduct)
 
 	server.Run(":8000")
 }
