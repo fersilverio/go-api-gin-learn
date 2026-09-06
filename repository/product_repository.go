@@ -174,3 +174,29 @@ func (pr *ProductRepository) ParcialUpdateProduct(id_product int, product *model
 
 	return rowsAffected, nil
 }
+
+func (pr *ProductRepository) DeleteProduct(id_product int) (int64, error) {
+	query, err := pr.connection.Prepare("DELETE FROM product WHERE id = $1")
+
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+
+	result, err := query.Exec(id_product)
+
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+
+	query.Close()
+	return rowsAffected, nil
+}

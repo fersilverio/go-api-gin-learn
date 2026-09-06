@@ -193,3 +193,42 @@ func (p *productController) ParcialUpdateProduct(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Produto atualizado com sucesso"})
 }
+
+func (p *productController) DeleteProduct(ctx *gin.Context) {
+	id := ctx.Param("productId")
+
+	if id == "" {
+		response := model.Response{
+			Message: "Id do produto nao pode ser nulo",
+		}
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	productId, err := strconv.Atoi(id)
+
+	if err != nil {
+		response := model.Response{
+			Message: "Id do produto precisa ser um numero",
+		}
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err = p.productUsecase.DeleteProduct(productId)
+
+	if err != nil {
+		if err == usecase.ErrNotFound {
+			response := model.Response{
+				Message: "Produto nao foi encontrado na base de dados",
+			}
+			ctx.JSON(http.StatusNotFound, response)
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Produto deletado com sucesso"})
+}

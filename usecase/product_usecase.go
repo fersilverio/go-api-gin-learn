@@ -77,3 +77,16 @@ func (pu *ProductUsecase) ParcialUpdateProduct(id_product int, product *model.Pr
 
 	return nil
 }
+
+func (pu *ProductUsecase) DeleteProduct(id_product int) error {
+	rowsAffected, err := pu.repository.DeleteProduct(id_product)
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
